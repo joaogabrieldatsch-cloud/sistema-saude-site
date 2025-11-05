@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Unidades de Saúde</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:"Inter",sans-serif;}
+
+    body{
+      background:#f5f8fb;
+      color:#333;
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+    }
+
+    nav{
+      background:#2d323a;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:1rem 2rem;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      flex-wrap:wrap;
+    }
+
+    /* ===== PADRONIZAÇÃO DOS BOTÕES DA NAVBAR ===== */
+    nav button {
+      background: #444b57;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    nav button:hover {
+      background: #3b82f6;
+      transform: translateY(-2px);
+    }
+
+    /* Ícones alinhados */
+    nav button i {
+      font-size: 1rem;
+    }
+
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      font-weight:600;
+      font-size:1.5rem;
+    }
+    .logo img{width:85px;height:85px;}
+
+    
+    .user-area{display:flex;align-items:center;gap:.8rem;}
+    .user-info{display:none;align-items:center;gap:.6rem;border-radius:8px;}
+    .user-info span{font-weight:500;}
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0; /* remove o espaço entre a navbar e o painel */
+      width: 100%;
+    }
+
+    /* ===== PAINEL ADMINISTRATIVO (SLIDE, FULL WIDTH, PUSH CONTENT) ===== */
+
+    #adminPanel {
+      background: white;
+      width: 100%;
+      box-sizing: border-box;
+
+      /* Remove espaçamentos externos */
+      margin: 0;
+      border-radius: 0; /* colado nas bordas */
+      box-shadow: none; /* opcional: remove sombra, para parecer colado */
+
+      /* Mantém espaçamento interno confortável */
+      padding: 1rem 1.2rem;
+
+      color: #111827;
+      overflow: hidden;
+
+      /* Animação original */
+      max-height: 0;
+      opacity: 0;
+      transform-origin: top;
+      transition:
+        max-height 0.45s cubic-bezier(.2,.9,.3,1),
+        padding 0.4s cubic-bezier(.2,.9,.3,1),
+        opacity 0.35s ease,
+        transform 0.35s ease;
+        position: relative;
+    }
+    
+    #adminPanel::after {
+      content: "";
+      display: block;
+      height: 8px; /* altura da barrinha azul */
+      background: #2563eb; /* cor azul */
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    /* Estado aberto (visível) */
+    #adminPanel.open {
+      max-height: 900px; /* valor alto o suficiente para conter o conteúdo; ajustável */
+      opacity: 1;
+      transform: translateY(0);
+      margin-bottom: 1.5rem; /* adiciona espaço entre o painel e o conteúdo abaixo */
+    }
+
+    /* Pequena barra indicadora visível somente quando painel oculto (apenas admins) */
+    #adminBar {
+      height: 8px; /* barra discreta */
+      width: 100%;
+      display: none; /* controlado via JS quando admin e painel oculto */
+      background: #3b82f6; /* cor coerente com sua paleta (azul) */
+      box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+      border-radius: 0 0 6px 6px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    /* Quando a barra deve aparecer (classe adicionada por JS) */
+    #adminBar.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsividade - garantir que painel fique bom em telas pequenas */
+    @media (max-width: 768px) {
+      #adminPanel.open { max-height: 1200px; } /* mais espaço vertical em mobile */
+    }
+    /* FIM DO NOVO PAINEL ADMINISTRATIVO*/
+
+
+    #adminPanel h3{margin-bottom:.8rem;color:#3b82f6;}
+    #adminPanel form{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:.8rem;margin-bottom:1rem;
+    }
+
+    /* ===== LABELS E CAMPOS DO PAINEL ADMINISTRATIVO ===== */
+    #adminPanel .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    #adminPanel label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+
+    #adminPanel input,
+    #adminPanel select {
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #adminPanel input:focus,
+    #adminPanel select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+
+    /* Ajuste no espaçamento entre grupos */
+    #adminPanel form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem 1.2rem;
+    }
+
+    #adminPanel input,#adminPanel select{
+      padding:.6rem;border-radius:6px;border:1px solid #ccc;outline:none;
+    }
+    #adminPanel button{
+      background:#3b82f6;color:white;border:none;border-radius:6px;padding:.6rem;cursor:pointer;transition:0.2s;
+    }
+    #adminPanel button:hover{background:#2563eb;}
+
+    /* ===== AJUSTES DE LEGIBILIDADE ===== */
+    #adminPanel label {
+      font-weight: 600;
+      color: #e5e7eb; /* cor mais clara para melhor leitura */
+      font-size: 0.95rem;
+    }
+
+    /* ===== Ajuste de cor dos labels no modo claro/escuro ===== */
+    body:not(.dark-mode) #adminPanel label {
+      color: #374151; /* cor escura no modo claro */
+    }
+
+    body.dark-mode #adminPanel label {
+      color: #e5e7eb; /* cor clara no modo escuro */
+    }
+
+    /* ===== ORGANIZAÇÃO DO FORMULÁRIO ===== */
+    #adminPanel .form-group.full-width {
+      grid-column: 1 / -1; /* faz ocupar toda a linha */
+    }
+
+    #adminPanel .button-group {
+      grid-column: 1 / -1; /* os botões ocupam toda a linha */
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ===== BOTÕES PADRONIZADOS ===== */
+    #adminPanel button {
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #ffffff;
+      transition: background-color 0.25s ease, transform 0.15s ease;
+    }
+
+    /* Cada botão mantém sua própria cor */
+
+
+    #adminPanel button:hover {
+      background-color: #1f2937;
+      transform: scale(1.03);
+    }
+
+    /* ===== ESPECIALIZAÇÕES (cores específicas para cada ação) ===== */
+    #backupBtn {
+      background-color: #2563eb; /* azul - ação primária */
+    }
+    #backupBtn:hover {
+      background-color: #1e40af;
+    }
+
+    #restoreBtn {
+      background-color: #059669; /* verde - restauração */
+    }
+    #restoreBtn:hover {
+      background-color: #047857;
+    }
+
+    #saveBtn {
+      background-color: #9333ea; /* roxo - cadastro */
+    }
+    #saveBtn:hover {
+      background-color: #7e22ce;
+    }
+
+    .backup-area{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;}
+
+    .search-area{text-align:center;margin-bottom:2rem;max-width:650px;width:100%;}
+    .search-area h1{font-size:1.8rem;margin-bottom:.4rem;}
+    .search-area p{color:#666;margin-bottom:1rem;line-height:1.5;}
+    .search-box{
+      display:flex;align-items:center;background:white;border-radius:8px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);overflow:hidden;
+    }
+
+    /* ===== CONTAINER DA PESQUISA + BOTÃO DE FILTRO ===== */
+    .search-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem; /* espaço entre a barra de pesquisa e o botão de filtro */
+      position: relative;
+      max-width: 650px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .search-box input{
+      flex:1;
+      border:none;
+      padding:.8rem;
+      outline:none;
+      font-size:1rem;
+    }
+    .search-box button{
+      background:#3b82f6;color:white;border:none;padding:.8rem 1rem;
+      cursor:pointer;transition:.2s;
+    }
+    .search-box button:hover{background:#2563eb;}
+
+    #cards{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:1.5rem;width:100%;max-width:1200px;
+    }
+
+    .card{
+      background:white;border-radius:12px;padding:1rem;
+      box-shadow:0 4px 10px rgba(0,0,0,0.05);
+      transition:transform 0.2s;
+    }
+    .card:hover{transform:translateY(-4px);}
+    .card h3{margin-bottom:.4rem;color:#3b82f6;}
+    .card p{font-size:.9rem;color:#555;margin-bottom:.3rem;}
+
+    .card .admin-actions{
+      display:flex;gap:.5rem;margin-top:.8rem;
+    }
+    .card .admin-actions button{
+      flex:1;padding:.4rem;border:none;border-radius:6px;
+      cursor:pointer;color:white;font-size:.9rem;
+    }
+    .edit-btn{background:#f59e0b;}
+    .delete-btn{background:#ef4444;}
+    .edit-btn:hover{background:#d97706;}
+    .delete-btn:hover{background:#dc2626;}
+
+    /* ===== ALINHAR BOTÃO "VER NO MAPA" NOS CARDS ===== */
+    .card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 260px; /* mantém todos os cards com a mesma altura mínima */
+    }
+
+    .card a {
+      margin-top: auto; /* empurra o botão para o final do card */
+      align-self: flex-start;
+    }
+
+    .card .view-btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .login-panel{
+      position:fixed;top:100px;right:30px;background:white;
+      padding:1.2rem;border-radius:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.15);
+      width:260px;display:none;flex-direction:column;gap:.8rem;z-index:10;
+    }
+    .login-panel input{
+      width:100%;padding:.6rem;border:1px solid #ccc;
+      border-radius:6px;outline:none;
+    }
+    .login-panel button{
+      background:#3b82f6;color:white;border:none;padding:.6rem;
+      border-radius:6px;cursor:pointer;transition:0.2s;
+    }
+    .login-panel button:hover{background:#2563eb;}
+
+    footer{background:#2d323a;color:#ccc;text-align:center;padding:.8rem;font-size:.9rem;}
+
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+
+    @media(max-width:768px){
+      nav{flex-direction:column;gap:1rem;}
+      .login-panel{position:static;width:100%;margin-top:1rem;}
+      #adminPanel form{grid-template-columns:1fr;}
+    }
+
+    /* ===== BOTÃO "VER NO MAPA" ===== */
+    .view-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .view-btn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    /* ===== ESTILO NO MODO ESCURO ===== */
+    body.dark-mode .view-btn {
+      background: #1e40af;
+      color: #e5e7eb;
+      border: 1px solid #3b82f6;
+    }
+    body.dark-mode .view-btn:hover {
+      background: #3b82f6;
+      color: white;
+    }
+
+
+    /* ===== MODO ESCURO ===== */
+    body.dark-mode {
+      background: #1f2937;
+      color: #e5e7eb;
+    }
+    body.dark-mode nav {
+      background: #111827;
+    }
+    body.dark-mode footer {
+      background: #111827;
+      color: #9ca3af;
+    }
+    body.dark-mode #adminPanel,
+    body.dark-mode .card,
+    body.dark-mode .login-panel,
+    body.dark-mode .search-box {
+      background: #273043;
+      color: #e5e7eb;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    body.dark-mode input,
+    body.dark-mode select {
+      background: #374151;
+      color: #f9fafb;
+      border-color: #4b5563;
+    }
+    body.dark-mode button {
+      color: white;
+    }
+    body.dark-mode .search-box input {
+      background: #374151;
+      color: white;
+    }
+    body.dark-mode .card h3 {
+      color: #60a5fa;
+    }
+
+    /* ===== BOTÃO DE FILTRO ===== */
+    #filterBtn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      height: 100%;
+    }
+
+    #filterBtn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    /* ===== MENU DE FILTRO ===== */
+    .filter-menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 0.8rem 1rem;
+      top: 100%;            /* aparece logo abaixo do botão */
+      right: 2.5rem;              /* alinhado ao lado esquerdo do botão */
+      margin-top: 0.5rem;
+      z-index: 20;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .filter-menu label {
+      font-size: 0.95rem;
+      color: #333;
+      margin: 0.4rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+    }
+
+    .filter-menu input {
+      accent-color: #3b82f6;
+    }
+
+    /* ===== MODO ESCURO DO FILTRO ===== */
+    body.dark-mode .filter-menu {
+      background: #273043;
+      color: #e5e7eb;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    body.dark-mode .filter-menu label {
+      color: #e5e7eb;
+    }
+    
+     /* ...seu CSS atual aqui... */
+
+/* === AJUSTE FINAL PARA BOTÕES LADO A LADO === */
+.card .card-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap; /* impede quebra de linha */
+}
+
+.card .card-buttons a {
+  flex: 1;
+}
+
+.card .card-buttons button {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap; /* impede quebra de texto */
+}
+
+/* Botão Ver no mapa */
+.view-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.view-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* Botão WhatsApp */
+.whatsapp-btn-inner {
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.whatsapp-btn-inner:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+}
+
+/* Ajuste modo escuro */
+body.dark-mode .whatsapp-btn-inner {
+  background: #15803d;
+  border: 1px solid #22c55e;
+}
+body.dark-mode .view-btn {
+  background: #1e40af;
+  border: 1px solid #3b82f6;
+}
+
+    /* === NOVO ESTILO DOS CARDS === */
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 1.4rem;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 280px;
+      border-left: 5px solid #3b82f6;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    }
+
+    /* Título da unidade */
+    .card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2563eb;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Blocos de informação com ícones */
+    .card .info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #444;
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .card .info i {
+      color: #3b82f6;
+      font-size: 1rem;
+      width: 18px;
+      text-align: center;
+    }
+
+    /* Separa o conteúdo dos botões */
+    .card .card-buttons {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    /* Ajuste para modo escuro */
+    body.dark-mode .card {
+      background: #273043;
+      border-left-color: #60a5fa;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    body.dark-mode .card .info i {
+      color: #93c5fd;
+    }
+
+    body.dark-mode .card h3 {
+      color: #60a5fa;
+    }
+
+
+    #pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 2rem 0 1rem;
+      flex-wrap: wrap;
+    }
+
+    #pagination button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    #pagination button:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    #pagination button.active {
+      background: #1e40af;
+    }
+
+    #pagination button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    body.dark-mode #pagination button {
+      background: #1e3a8a;
+      color: #e5e7eb;
+    }
+
+    body.dark-mode #pagination button.active {
+      background: #2563eb;
+    }
+
+</style>
+</head>
+<body>
+  <nav>
+    <div class="logo">
+      <img src="imagens/logo.png" alt="Logo">
+      <span>Sistema de Telefonia de Saúde</span>
+    </div>
+    <div class="user-area">
+      <div class="user-info" id="userInfo">
+        <i class="fa-solid fa-user"></i>
+        <span id="userName"></span>
+        <button class="logout-btn" id="logoutBtn">Sair</button>
+      </div>
+      <button id="darkModeToggle" title="Alternar modo escuro">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+      <button class="login-btn" id="loginToggle"><i class="fa-solid fa-user"></i> Login</button>
+      <button id="panelToggle" style="display: none;">
+        <i class="fa-solid fa-eye-slash"></i> Ocultar Painel
+      </button>
+    </div>
+  </nav>
+  <!-- Barra discreta que aparece apenas quando admin está logado e o painel está oculto -->
+  <div id="adminBar" title="Painel administrativo oculto (você está logado como admin)"></div>
+  <main>
+    <div id="adminPanel">
+      <h3>Painel Administrativo - Gerenciar Unidades de Saúde</h3>
+      <!-- ===== NOVO FORMULÁRIO COM LABELS ===== -->
+      <form id="addForm">
+        <div class="form-group">
+          <label for="unitName">Nome da Unidade</label>
+          <input type="text" id="unitName" placeholder="Ex: UBS Central" required>
+        </div>
+
+        <div class="form-group">
+          <label for="type">Tipo de Unidade</label>
+          <select id="type" required>
+            <option value="">Selecione...</option>
+            <option value="CAIS">CAIS</option>
+            <option value="UBS">UBS</option>
+            <option value="Hospital">Hospital</option>
+            <option value="Setor Administrativo">Setor Administrativo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Endereço</label>
+          <input type="text" id="address" placeholder="Rua, Avenida, etc." required>
+        </div>
+
+        <div class="form-group">
+          <label for="number">Número</label>
+          <input type="text" id="number" placeholder="Ex: 123" required>
+        </div>
+
+        <div class="form-group">
+          <label for="city">Cidade</label>
+          <input type="text" id="city" placeholder="Ex: Goiânia" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Telefone</label>
+          <input type="text" id="phone" placeholder="(62) 99999-9999" required>
+        </div>
+
+        <div class="form-group">
+          <label for="map">Link do Google Maps (opcional)</label>
+          <input type="text" id="map" placeholder="Cole aqui o link do Google Maps">
+        </div>
+
+        <div class="form-group">
+          <label for="whatsapp">Link do WhatsApp (opcional)</label>
+          <input type="text" id="whatsapp" placeholder="Cole aqui o link do WhatsApp">
+        </div>
+
+        <!-- ===== SEÇÃO DE BACKUP E BOTÕES ===== -->
+        <div class="form-group">
+          <label for="backupFile">Selecionar Arquivo de Backup</label>
+          <input type="file" id="backupFile" accept=".json">
+        </div>
+        <div class="button-group">
+          <button type="button" id="backupBtn">Fazer Backup</button>
+          <button type="button" id="restoreBtn">Restaurar Backup</button>
+          <button type="submit" id="saveBtn">Cadastrar Unidade</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="search-area">
+      <h1>Localize Unidades de Saúde</h1>
+      <p>Pesquise rapidamente por CAIS, UBS, Hospitais e setores administrativos da rede municipal de saúde.</p>
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" id="search" placeholder="Pesquisar por nome, cidade ou tipo...">
+          <button><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        
+        <button id="filterBtn"><i class="fa-solid fa-filter"></i> Filtro</button>
+
+        <!-- Menu dropdown oculto -->
+        <div id="filterMenu" class="filter-menu">
+          <label><input type="radio" name="filter" value="all" checked> Todos</label>
+          <label><input type="radio" name="filter" value="CAIS"> CAIS</label>
+          <label><input type="radio" name="filter" value="UBS"> UBS</label>
+          <label><input type="radio" name="filter" value="Hospital"> Hospital</label>
+          <label><input type="radio" name="filter" value="Setor Administrativo"> Setor Administrativo</label>
+        </div>
+      </div>  
+    </div>
+
+    <div id="cards"></div>
+
+    <div class="login-panel" id="loginPanel">
+      <h3>Acesso Administrativo</h3>
+      <input type="text" id="user" placeholder="Usuário">
+      <input type="password" id="pass" placeholder="Senha">
+      <button id="loginBtn">Entrar</button>
+    </div>
+  </main>
+  <div id="pagination"></div>
+  <footer>
+    © 2025 Sistema Telefonia de Saúde - Desenvolvido para facilitar o acesso e a gestão de unidades públicas.
+  </footer>
+
+  <script>
+    let units = [
+      { name: "CAIS Central", type: "CAIS", address: "Rua das Flores", number: "120", city: "Centro", phone: "(62) 99999-9999", map: "#" },
+      { name: "UBS Jardim Aurora", type: "UBS", address: "Av. Goiás", number: "400", city: "Jardim Aurora", phone: "(62) 98888-8888", map: "#" },
+    ];
+
+    const container = document.querySelector("#cards");
+    const searchInput = document.getElementById("search");
+    const adminPanel = document.getElementById("adminPanel");
+    const saveBtn = document.getElementById("saveBtn");
+
+    let isAdmin = false;
+    let editIndex = null;
+
+
+    /* ===== PAGINAÇÃO ===== */
+const itemsPerPage = 12; // agora mostra 12 unidades por página
+let currentPage = 1;
+
+function renderPagination(totalItems) {
+  const paginationContainer = document.getElementById("pagination");
+  if (!paginationContainer) return;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  if (totalPages <= 1) {
+    paginationContainer.innerHTML = "";
+    return;
+  }
+
+  paginationContainer.innerHTML = `
+    <button ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})">Anterior</button>
+    ${Array.from({ length: totalPages }, (_, i) =>
+      `<button class="${currentPage === i + 1 ? "active" : ""}" onclick="changePage(${i + 1})">${i + 1}</button>`
+    ).join("")}
+    <button ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})">Próxima</button>
+  `;
+}
+
+function changePage(page) {
+  currentPage = page;
+  aplicarFiltros(); // mantém integração com filtro e busca
+}
+
+function renderUnits(list = units) {
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const paginated = list.slice(start, end);
+
+  container.innerHTML = paginated.map((u, i) => `
+    <div class="card">
+      <h3><i class="fa-solid fa-house-medical"></i> ${u.name}</h3>
+      <div class="info"><i class="fa-solid fa-building"></i><span><b>${u.type}</b></span></div>
+      <div class="info"><i class="fa-solid fa-location-dot"></i><span>${u.address}, ${u.number} - ${u.city}</span></div>
+      <div class="info"><i class="fa-solid fa-phone"></i><span>${u.phone}</span></div>
+
+      <div class="card-buttons">
+        <a href="${u.map}" target="_blank">
+          <button class="view-btn"><i class="fa-solid fa-map-location-dot"></i> Ver no mapa</button>
+        </a>
+        ${u.whatsapp ? `
+        <a href="${u.whatsapp}" target="_blank">
+          <button class="whatsapp-btn-inner"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+        </a>` : ""}
+      </div>
+
+      ${isAdmin ? `
+      <div class="admin-actions">
+        <button class="edit-btn" onclick="editUnit(${(currentPage - 1) * itemsPerPage + i})">
+          <i class="fa-solid fa-pen"></i> Editar
+        </button>
+        <button class="delete-btn" onclick="deleteUnit(${(currentPage - 1) * itemsPerPage + i})">
+          <i class="fa-solid fa-trash"></i> Deletar
+        </button>
+      </div>` : ""}
+    </div>
+  `).join('');
+
+  renderPagination(list.length);
+}
+
+
+
+    renderUnits();
+
+    searchInput.addEventListener("input", aplicarFiltros);
+
+    // ===== FILTRO DE TIPO =====
+    const filterBtn = document.getElementById("filterBtn");
+    const filterMenu = document.getElementById("filterMenu");
+    let selectedFilter = "all";
+
+    // Mostrar / ocultar menu de filtro
+    filterBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isVisible = filterMenu.style.display === "flex";
+      filterMenu.style.display = isVisible ? "none" : "flex";
+    });
+
+    // Fechar o menu ao clicar fora
+    document.addEventListener("click", (e) => {
+      if (!filterMenu.contains(e.target) && e.target !== filterBtn) {
+        filterMenu.style.display = "none";
+      }
+    });
+
+    // Aplicar o filtro selecionado
+    filterMenu.addEventListener("change", (e) => {
+      selectedFilter = e.target.value;
+      aplicarFiltros();
+    });
+
+    // Atualizar lista combinando busca + filtro
+    function aplicarFiltros() {
+      const term = searchInput.value.toLowerCase();
+      const filtered = units.filter(u => {
+        const matchSearch =
+          u.name.toLowerCase().includes(term) ||
+          u.city.toLowerCase().includes(term) ||
+          u.type.toLowerCase().includes(term);
+        const matchFilter =
+          selectedFilter === "all" || u.type === selectedFilter;
+        return matchSearch && matchFilter;
+      });
+      renderUnits(filtered);
+    }
+
+    // ===== LOGIN =====
+    const loginToggle = document.getElementById("loginToggle");
+    const loginPanel = document.getElementById("loginPanel");
+    const loginBtn = document.getElementById("loginBtn");
+    const hidePanel = document.getElementById("panelToggle");
+    const userInfo = document.getElementById("userInfo");
+    const userName = document.getElementById("userName");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // ===== MOSTRAR / OCULTAR PAINEL DE LOGIN =====
+loginToggle.addEventListener("click", () => {
+  const isVisible = loginPanel.style.display === "flex";
+  loginPanel.style.display = isVisible ? "none" : "flex";
+});
+   
+    // ===== CONTROLE SUAVE DO PAINEL ADMINISTRATIVO (ABRIR/FECHAR) =====
+const adminBar = document.getElementById('adminBar'); // a barra discreta
+// função para abrir o painel
+function openAdminPanel() {
+  adminPanel.classList.add('open');
+  // esconder a barra quando o painel estiver aberto
+  adminBar.classList.remove('visible');
+  // mostrar botão "Ocultar" (caso esteja escondido)
+  hidePanel.style.display = 'inline-block';
+  hidePanel.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Painel';
+  // rolar suavemente até o painel (opcional)
+  adminPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// função para fechar o painel (deixa a barra visível se admin)
+function closeAdminPanel() {
+  adminPanel.classList.remove('open');
+  // se ainda somos admin, mostrar a barrinha indicadora discreta
+  if (isAdmin) {
+    adminBar.classList.add('visible');
+    hidePanel.style.display = 'inline-block';
+    hidePanel.innerHTML = '<i class="fa-solid fa-eye"></i> Mostrar Painel';
+  } else {
+    adminBar.classList.remove('visible');
+    hidePanel.style.display = 'none';
+  }
+}
+
+// Atualizar os handlers de login / logout para usar as funções:
+loginBtn.addEventListener("click", () => {
+  const user = document.getElementById("user").value.trim();
+  const pass = document.getElementById("pass").value.trim();
+  if (user === "admin" && pass === "admin") {
+    alert("Login realizado com sucesso!");
+    isAdmin = true;
+    loginPanel.style.display = "none";
+
+    // abrir painel por padrão
+    openAdminPanel();
+
+    loginToggle.style.display = "none";
+    userInfo.style.display = "flex";
+    userName.textContent = user;
+    renderUnits();
+  } else {
+    alert("Usuário ou senha incorretos!");
+  }
+});
+
+logoutBtn.addEventListener("click", () => {
+  isAdmin = false;
+  userInfo.style.display = "none";
+  loginToggle.style.display = "inline-block";
+
+  // fechar painel e esconder barra
+  adminBar.classList.remove('visible');
+  adminPanel.classList.remove('open');
+  hidePanel.style.display = 'none';
+
+  renderUnits();
+});
+
+// Handler do botão que mostra/oculta o painel (hidePanel)
+hidePanel.addEventListener("click", () => {
+  // se o painel está aberto -> fechar; caso contrário abrir
+  const isOpen = adminPanel.classList.contains('open');
+  if (isOpen) {
+    closeAdminPanel();
+  } else {
+    openAdminPanel();
+  }
+});
+
+// Ao carregar a página, se já formos admin (caso de persistência futura), ajustar estados.
+// Atualmente isAdmin inicia false, então nada aparece; deixar preparado.
+if (localStorage.getItem("isAdmin") === "true") {
+  isAdmin = true;
+  userInfo.style.display = "flex";
+  userName.textContent = localStorage.getItem("adminUser") || 'admin';
+  openAdminPanel();
+}
+    
+    // ===== CADASTRAR / EDITAR =====
+    const addForm = document.getElementById("addForm");
+    addForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const newUnit = {
+        name: document.getElementById("unitName").value,
+        type: document.getElementById("type").value,
+        address: document.getElementById("address").value,
+        number: document.getElementById("number").value,
+        city: document.getElementById("city").value,
+        phone: document.getElementById("phone").value,
+        map: document.getElementById("map").value || "#",
+        whatsapp: document.getElementById("whatsapp").value || ""
+      };
+      if (editIndex !== null) {
+        units[editIndex] = newUnit;
+        editIndex = null;
+        saveBtn.textContent = "Cadastrar Unidade";
+        alert("Unidade atualizada com sucesso!");
+      } else {
+        units.push(newUnit);
+        alert("Unidade cadastrada com sucesso!");
+      }
+      addForm.reset();
+      renderUnits();
+    });
+
+    window.editUnit = function(index) {
+      const u = units[index];
+      document.getElementById("unitName").value = u.name;
+      document.getElementById("type").value = u.type;
+      document.getElementById("address").value = u.address;
+      document.getElementById("number").value = u.number;
+      document.getElementById("city").value = u.city;
+      document.getElementById("phone").value = u.phone;
+      document.getElementById("map").value = u.map;
+      editIndex = index;
+      saveBtn.textContent = "Salvar Alterações";
+      adminPanel.scrollIntoView({ behavior: "smooth" });
+    }
+
+    window.deleteUnit = function(index) {
+      const confirmDelete = confirm(`Deseja realmente excluir a unidade "${units[index].name}"?`);
+      if (confirmDelete) {
+        units.splice(index, 1);
+        renderUnits();
+        alert("Unidade deletada com sucesso!");
+      }
+    }
+
+    // ===== BACKUP =====
+    document.getElementById("backupBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(units, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "backup_unidades.json";
+      link.click();
+    });
+
+    document.getElementById("restoreBtn").addEventListener("click", () => {
+      const fileInput = document.getElementById("backupFile");
+      const file = fileInput.files[0];
+      if (!file) return alert("Selecione um arquivo JSON!");
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          units = JSON.parse(e.target.result);
+          renderUnits();
+          alert("Backup restaurado!");
+        } catch {
+          alert("Erro ao restaurar JSON!");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // ===== MODO ESCURO =====
+    const darkModeToggle = document.getElementById("darkModeToggle");
+
+    // Carregar modo salvo
+    if (localStorage.getItem("darkMode") === "enabled") {
+      document.body.classList.add("dark-mode");
+      darkModeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+    }
+
+    // Alternar modo escuro
+    darkModeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+      darkModeToggle.innerHTML = isDark
+        ? '<i class="fa-solid fa-sun"></i>'
+        : '<i class="fa-solid fa-moon"></i>';
+    });
+
+  </script>
+</body>
+</html>
