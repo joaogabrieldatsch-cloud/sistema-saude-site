@@ -1,0 +1,11 @@
+[
+  {
+    "name": "UBS Central",
+    "type": "UBS",
+    "address": "Rua Principal",
+    "number": "100",
+    "city": "Passo Fundo",
+    "phone": "(54) 99999-0001",
+    "map": "#"
+  }
+]
