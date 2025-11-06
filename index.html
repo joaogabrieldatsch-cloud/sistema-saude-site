@@ -1051,9 +1051,10 @@ if (localStorage.getItem("isAdmin") === "true") {
         units.push(newUnit);
         alert("Unidade cadastrada com sucesso!");
       }
-      if (isAdmin) atualizarJsonNoGitHub();
       addForm.reset();
       renderUnits();
+
+      if (isAdmin) atualizarJsonNoGitHub();
     });
 
     window.editUnit = function(index) {
@@ -1153,5 +1154,6 @@ async function atualizarJsonNoGitHub() {
 </body>
 
 </html>
+
 
 
