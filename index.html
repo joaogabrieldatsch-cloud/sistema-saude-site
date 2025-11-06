@@ -848,6 +848,24 @@ function changePage(page) {
   aplicarFiltros(); // mantém integração com filtro e busca
 }
 
+    // ===== CARREGAR DADOS DO GITHUB =====
+async function carregarUnidadesDoGitHub() {
+  try {
+    const response = await fetch(
+      "https://raw.githubusercontent.com/joaogabrieldatsch-cloud/sistema-saude-site/main/unidades.json"
+    );
+    if (!response.ok) throw new Error("Erro ao carregar unidades.json");
+    units = await response.json();
+    renderUnits();
+  } catch (err) {
+    console.error("Erro ao carregar JSON remoto:", err);
+    renderUnits(); // mostra as unidades padrão se der erro
+  }
+}
+
+// chama a função ao iniciar
+carregarUnidadesDoGitHub();
+
 function renderUnits(list = units) {
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage;
@@ -1154,6 +1172,7 @@ async function atualizarJsonNoGitHub() {
 </body>
 
 </html>
+
 
 
 
