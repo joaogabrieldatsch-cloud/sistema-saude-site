@@ -1078,6 +1078,8 @@ if (localStorage.getItem("isAdmin") === "true") {
       }
     }
 
+    if (isAdmin) atualizarJsonNoGitHub();
+
     // ===== BACKUP =====
     document.getElementById("backupBtn").addEventListener("click", () => {
       const blob = new Blob([JSON.stringify(units, null, 2)], { type: "application/json" });
@@ -1150,3 +1152,4 @@ async function atualizarJsonNoGitHub() {
 </body>
 
 </html>
+
