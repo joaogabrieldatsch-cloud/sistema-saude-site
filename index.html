@@ -1051,6 +1051,7 @@ if (localStorage.getItem("isAdmin") === "true") {
         units.push(newUnit);
         alert("Unidade cadastrada com sucesso!");
       }
+      if (isAdmin) atualizarJsonNoGitHub();
       addForm.reset();
       renderUnits();
     });
@@ -1075,10 +1076,10 @@ if (localStorage.getItem("isAdmin") === "true") {
         units.splice(index, 1);
         renderUnits();
         alert("Unidade deletada com sucesso!");
+        
+        if (isAdmin) atualizarJsonNoGitHub();
       }
     }
-
-    if (isAdmin) atualizarJsonNoGitHub();
 
     // ===== BACKUP =====
     document.getElementById("backupBtn").addEventListener("click", () => {
@@ -1152,4 +1153,5 @@ async function atualizarJsonNoGitHub() {
 </body>
 
 </html>
+
 
