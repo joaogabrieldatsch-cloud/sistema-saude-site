@@ -1123,6 +1123,30 @@ if (localStorage.getItem("isAdmin") === "true") {
         : '<i class="fa-solid fa-moon"></i>';
     });
 
+  // ======= INTEGRAÇÃO COM BACKEND (GitHub via Render) =======
+const backendUrl = "https://sistema-saude-backend.onrender.com"; // sua URL do Render
+const apiSecret = "meuSegredo"; // mesma senha que colocou no Render
+
+async function atualizarJsonNoGitHub() {
+  try {
+    const res = await fetch(backendUrl + "/update-json", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-secret": apiSecret
+      },
+      body: JSON.stringify(units)
+    });
+    const data = await res.json();
+    if (data.success) alert("✅ Atualizado no GitHub com sucesso!");
+    else alert("❌ Erro ao atualizar!");
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao conectar ao servidor!");
+  }
+}
+   
   </script>
 </body>
+
 </html>
