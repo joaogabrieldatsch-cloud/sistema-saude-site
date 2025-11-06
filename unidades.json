@@ -1,11 +1,30 @@
 [
   {
-    "name": "UBS Central",
-    "type": "UBS",
-    "address": "Rua Principal",
-    "number": "100",
-    "city": "Passo Fundo",
-    "phone": "(54) 99999-0001",
+    "name": "CAIS Central",
+    "type": "CAIS",
+    "address": "Rua das Flores",
+    "number": "120",
+    "city": "Centro",
+    "phone": "(62) 99999-9999",
     "map": "#"
+  },
+  {
+    "name": "UBS Jardim Aurora",
+    "type": "UBS",
+    "address": "Av. Goiás",
+    "number": "400",
+    "city": "Jardim Aurora",
+    "phone": "(62) 98888-8888",
+    "map": "#"
+  },
+  {
+    "name": "UBS 1",
+    "type": "UBS",
+    "address": "Rua Marquês De Monte Alegre",
+    "number": "209",
+    "city": "Passo Fundo",
+    "phone": "984769834",
+    "map": "#",
+    "whatsapp": ""
   }
 ]
